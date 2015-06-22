@@ -46,7 +46,7 @@ Here are some standard links for getting your machine calibrated:
 // User-specified version info of this build to display in [Pronterface, etc] terminal window during
 // startup. Implementation of an idea by Prof Braino to inform user that any changes made to this
 // build by the user have been successfully uploaded into firmware.
-#define STRING_CONFIG_H_AUTHOR "(none, default config)" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "setar@roboforum.ru" // Who made the changes.
 #define STRING_SPLASH_LINE1 BUILD_VERSION // will be shown during bootup in line 1
 //#define STRING_SPLASH_LINE2 STRING_DISTRIBUTION_DATE // will be shown during bootup in line 2
 
@@ -77,7 +77,7 @@ Here are some standard links for getting your machine calibrated:
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
-// #define MACHINE_UUID "00000000-0000-0000-0000-000000000000"
+#define MACHINE_UUID "98576E00-41DF-4114-82D5-683A81B8835A"
 
 // This defines the number of extruders
 // :[1,2,3,4]
@@ -97,7 +97,7 @@ Here are some standard links for getting your machine calibrated:
 #define POWER_SUPPLY 1
 
 // Define this to have the electronics keep the power supply off on startup. If you don't know what this is leave it.
-//#define PS_DEFAULT_OFF
+#define PS_DEFAULT_OFF
 
 // @section temperature
 
@@ -147,7 +147,7 @@ Here are some standard links for getting your machine calibrated:
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_3 0
-#define TEMP_SENSOR_BED 0
+#define TEMP_SENSOR_BED 1
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
 //#define TEMP_SENSOR_1_AS_REDUNDANT
@@ -205,22 +205,25 @@ Here are some standard links for getting your machine calibrated:
   #define PID_INTEGRAL_DRIVE_MAX PID_MAX  //limit for the integral term
   #define K1 0.95 //smoothing factor within the PID
 
-  // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
-  // Ultimaker
-  #define  DEFAULT_Kp 22.2
-  #define  DEFAULT_Ki 1.08
-  #define  DEFAULT_Kd 114
+#define  DEFAULT_Kp 46.30
+#define  DEFAULT_Ki 3.03
+#define  DEFAULT_Kd 176.62
 
-  // MakerGear
-  //#define  DEFAULT_Kp 7.0
-  //#define  DEFAULT_Ki 0.1
-  //#define  DEFAULT_Kd 12
+// If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
+// Ultimaker
+//    #define  DEFAULT_Kp 22.2
+//    #define  DEFAULT_Ki 1.08
+//    #define  DEFAULT_Kd 114
 
-  // Mendel Parts V9 on 12V
-  //#define  DEFAULT_Kp 63.0
-  //#define  DEFAULT_Ki 2.25
-  //#define  DEFAULT_Kd 440
+// MakerGear
+//    #define  DEFAULT_Kp 7.0
+//    #define  DEFAULT_Ki 0.1
+//    #define  DEFAULT_Kd 12
 
+// Mendel Parts V9 on 12V
+//    #define  DEFAULT_Kp 63.0
+//    #define  DEFAULT_Ki 2.25
+//    #define  DEFAULT_Kd 440
 #endif // PIDTEMP
 
 //===========================================================================
@@ -236,8 +239,8 @@ Here are some standard links for getting your machine calibrated:
 // shouldn't use bed PID until someone else verifies your hardware works.
 // If this is enabled, find your own PID constants below.
 //#define PIDTEMPBED
-
-//#define BED_LIMIT_SWITCHING
+//
+#define BED_LIMIT_SWITCHING
 
 // This sets the max power delivered to the bed, and replaces the HEATER_BED_DUTY_CYCLE_DIVIDER option.
 // all forms of bed control obey this (PID, bang-bang, bang-bang with hysteresis)
@@ -312,25 +315,25 @@ Here are some standard links for getting your machine calibrated:
 // @section homing
 
 // coarse Endstop Settings
-#define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
+//#define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
 
 #ifndef ENDSTOPPULLUPS
   // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined
-  // #define ENDSTOPPULLUP_XMAX
-  // #define ENDSTOPPULLUP_YMAX
-  // #define ENDSTOPPULLUP_ZMAX
-  // #define ENDSTOPPULLUP_XMIN
-  // #define ENDSTOPPULLUP_YMIN
+  #define ENDSTOPPULLUP_XMAX
+  #define ENDSTOPPULLUP_YMAX
+  #define ENDSTOPPULLUP_ZMAX
+  #define ENDSTOPPULLUP_XMIN
+  #define ENDSTOPPULLUP_YMIN
   // #define ENDSTOPPULLUP_ZMIN
   // #define ENDSTOPPULLUP_ZPROBE
 #endif
 
 // Mechanical endstop with COM to ground and NC to Signal uses "false" here (most common setup).
-const bool X_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool X_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Y_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Y_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 //#define DISABLE_MAX_ENDSTOPS
@@ -363,9 +366,9 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 // @section machine
 
 // Invert the stepper direction. Change (or reverse the motor connector) if an axis goes the wrong way.
-#define INVERT_X_DIR false
-#define INVERT_Y_DIR true
-#define INVERT_Z_DIR false
+#define INVERT_X_DIR true
+#define INVERT_Y_DIR false
+#define INVERT_Z_DIR true
 
 // @section extruder
 
@@ -380,9 +383,9 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 // ENDSTOP SETTINGS:
 // Sets direction of endstops when homing; 1=MAX, -1=MIN
 // :[-1,1]
-#define X_HOME_DIR -1
+#define X_HOME_DIR 1
 #define Y_HOME_DIR -1
-#define Z_HOME_DIR -1
+#define Z_HOME_DIR 1
 
 #define min_software_endstops true // If true, axis won't move to coordinates less than HOME_POS.
 #define max_software_endstops true  // If true, axis won't move to coordinates greater than the defined lengths below.
@@ -393,9 +396,9 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 #define X_MIN_POS 0
 #define Y_MIN_POS 0
 #define Z_MIN_POS 0
-#define X_MAX_POS 200
-#define Y_MAX_POS 200
-#define Z_MAX_POS 200
+#define X_MAX_POS 375
+#define Y_MAX_POS 290
+#define Z_MAX_POS 300
 
 //===========================================================================
 //========================= Filament Runout Sensor ==========================
@@ -459,44 +462,44 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
   #ifdef AUTO_BED_LEVELING_GRID
 
-    #define LEFT_PROBE_BED_POSITION 15
-    #define RIGHT_PROBE_BED_POSITION 170
-    #define FRONT_PROBE_BED_POSITION 20
-    #define BACK_PROBE_BED_POSITION 170
+    #define LEFT_PROBE_BED_POSITION 50
+    #define RIGHT_PROBE_BED_POSITION 325
+    #define FRONT_PROBE_BED_POSITION 50
+    #define BACK_PROBE_BED_POSITION 240
 
     #define MIN_PROBE_EDGE 10 // The probe square sides can be no smaller than this
 
     // Set the number of grid points per dimension
     // You probably don't need more than 3 (squared=9)
-    #define AUTO_BED_LEVELING_GRID_POINTS 2
+    #define AUTO_BED_LEVELING_GRID_POINTS 3
 
   #else  // !AUTO_BED_LEVELING_GRID
 
       // Arbitrary points to probe. A simple cross-product
       // is used to estimate the plane of the bed.
-      #define ABL_PROBE_PT_1_X 15
-      #define ABL_PROBE_PT_1_Y 180
-      #define ABL_PROBE_PT_2_X 15
-      #define ABL_PROBE_PT_2_Y 20
-      #define ABL_PROBE_PT_3_X 170
-      #define ABL_PROBE_PT_3_Y 20
+      #define ABL_PROBE_PT_1_X 50
+      #define ABL_PROBE_PT_1_Y 240
+      #define ABL_PROBE_PT_2_X 325
+      #define ABL_PROBE_PT_2_Y 240
+      #define ABL_PROBE_PT_3_X X_MAX_POS/2
+      #define ABL_PROBE_PT_3_Y 50
 
   #endif // AUTO_BED_LEVELING_GRID
 
   // Offsets to the probe relative to the extruder tip (Hotend - Probe)
   // X and Y offsets must be integers
-  #define X_PROBE_OFFSET_FROM_EXTRUDER -25     // Probe on: -left  +right
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER -29     // Probe on: -front +behind
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER -12.35  // -below (always!)
+  #define X_PROBE_OFFSET_FROM_EXTRUDER -41     // Probe on: -left  +right
+  #define Y_PROBE_OFFSET_FROM_EXTRUDER -23//-23.5     // Probe on: -front +behind
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER -1.7  // -below (always!)
 
-  #define Z_RAISE_BEFORE_HOMING 4       // (in mm) Raise Z before homing (G28) for Probe Clearance.
+  #define Z_RAISE_BEFORE_HOMING 3       // (in mm) Raise Z before homing (G28) for Probe Clearance.
                                         // Be sure you have this distance over your Z_MAX_POS in case
 
-  #define XY_TRAVEL_SPEED 8000         // X and Y axis travel speed between probes, in mm/min
+  #define XY_TRAVEL_SPEED 6000         // X and Y axis travel speed between probes, in mm/min
 
-  #define Z_RAISE_BEFORE_PROBING 15   //How much the extruder will be raised before traveling to the first probing point.
-  #define Z_RAISE_BETWEEN_PROBINGS 5  //How much the extruder will be raised when traveling from between next probing points
-  #define Z_RAISE_AFTER_PROBING 15    //How much the extruder will be raised after the last probing point.
+  #define Z_RAISE_BEFORE_PROBING 5   //How much the extruder will be raised before traveling to the first probing point.
+  #define Z_RAISE_BETWEEN_PROBINGS 1  //How much the extruder will be raised when traveling from between next probing points
+  #define Z_RAISE_AFTER_PROBING 1    //How much the extruder will be raised after the last probing point.
 
 //   #define Z_PROBE_END_SCRIPT "G1 Z10 F12000\nG1 X15 Y330\nG1 Z0.5\nG1 Z10" //These commands will be executed in the end of G29 routine.
                                                                             //Useful to retract a deployable probe.
@@ -548,15 +551,15 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 // @section homing
 
 // The position of the homing switches
-//#define MANUAL_HOME_POSITIONS  // If defined, MANUAL_*_HOME_POS below will be used
+#define MANUAL_HOME_POSITIONS  // If defined, MANUAL_*_HOME_POS below will be used
 //#define BED_CENTER_AT_0_0  // If defined, the center of the bed is at (X=0, Y=0)
 
 // Manual homing switch locations:
 // For deltabots this means top and center of the Cartesian print volume.
 #ifdef MANUAL_HOME_POSITIONS
-  #define MANUAL_X_HOME_POS 0
-  #define MANUAL_Y_HOME_POS 0
-  #define MANUAL_Z_HOME_POS 0
+  #define MANUAL_X_HOME_POS 347
+  #define MANUAL_Y_HOME_POS -25
+  #define MANUAL_Z_HOME_POS (310+0.05)
   //#define MANUAL_Z_HOME_POS 402 // For delta: Distance between nozzle and print surface after homing.
 #endif
 
@@ -566,17 +569,17 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
  * MOVEMENT SETTINGS
  */
 
-#define HOMING_FEEDRATE {50*60, 50*60, 4*60, 0}  // set the homing speeds (mm/min)
+#define HOMING_FEEDRATE {50*60, 100*60, 8*60, 0}  // set the homing speeds (mm/min)
 
 // default settings
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {80,80,4000,500}  // default steps per unit for Ultimaker
-#define DEFAULT_MAX_FEEDRATE          {300, 300, 5, 25}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {3000,3000,100,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {379,53.5,200*16/2,560}  // steps per unit
+#define DEFAULT_MAX_FEEDRATE          {50, 300, 8, 25}    // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {500,500,40,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
-#define DEFAULT_ACCELERATION          3000    // X, Y, Z and E acceleration in mm/s^2 for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration in mm/s^2 for retracts
-#define DEFAULT_TRAVEL_ACCELERATION   3000    // X, Y, Z acceleration in mm/s^2 for travel (non printing) moves
+#define DEFAULT_ACCELERATION          500    // X, Y, Z and E acceleration in mm/s^2 for printing moves
+#define DEFAULT_RETRACT_ACCELERATION  3000   // E acceleration in mm/s^2 for retracts
+#define DEFAULT_TRAVEL_ACCELERATION   500    // X, Y, Z acceleration in mm/s^2 for travel (non printing) moves
 
 // The speed change that does not require acceleration (i.e. the software might assume it can be done instantaneously)
 #define DEFAULT_XYJERK                20.0    // (mm/sec)
@@ -622,7 +625,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 #define PLA_PREHEAT_HPB_TEMP 70
 #define PLA_PREHEAT_FAN_SPEED 0   // Insert Value between 0 and 255
 
-#define ABS_PREHEAT_HOTEND_TEMP 240
+#define ABS_PREHEAT_HOTEND_TEMP 200
 #define ABS_PREHEAT_HPB_TEMP 110
 #define ABS_PREHEAT_FAN_SPEED 0   // Insert Value between 0 and 255
 
@@ -643,12 +646,12 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
 //#define ULTRA_LCD  //general LCD support, also 16x2
 //#define DOGLCD  // Support for SPI LCD 128x64 (Controller ST7565R graphic Display Family)
-//#define SDSUPPORT // Enable SD Card Support in Hardware Console
+#define SDSUPPORT // Enable SD Card Support in Hardware Console
 //#define SDSLOW // Use slower SD transfer mode (not normally needed - uncomment if you're getting volume init error)
 //#define SD_CHECK_AND_RETRY // Use CRC checks and retries on the SD communication
 //#define ENCODER_PULSES_PER_STEP 1 // Increase if you have a high resolution encoder
 //#define ENCODER_STEPS_PER_MENU_ITEM 5 // Set according to ENCODER_PULSES_PER_STEP or your liking
-//#define ULTIMAKERCONTROLLER //as available from the Ultimaker online store.
+#define ULTIMAKERCONTROLLER //as available from the Ultimaker online store.
 //#define ULTIPANEL  //the UltiPanel as on Thingiverse
 //#define LCD_FEEDBACK_FREQUENCY_DURATION_MS 100 // the duration the buzzer plays the UI feedback sound. ie Screen Click
 //#define LCD_FEEDBACK_FREQUENCY_HZ 1000         // this is the tone frequency the buzzer plays when on UI feedback. ie Screen Click
