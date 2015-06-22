@@ -110,8 +110,8 @@
 
 #define HEATER_2_PIN       -1
 
-#define TEMP_0_PIN         13   // ANALOG NUMBERING
-#define TEMP_1_PIN         15   // ANALOG NUMBERING
+#define TEMP_0_PIN         9//13   // ANALOG NUMBERING
+#define TEMP_1_PIN         10//15   // ANALOG NUMBERING
 #define TEMP_2_PIN         -1   // ANALOG NUMBERING
 
 #if MB(RAMPS_13_EFF) || MB(RAMPS_13_EEF) || MB(RAMPS_13_SF)
@@ -120,7 +120,7 @@
   #define HEATER_BED_PIN     8    // BED
 #endif
 
-#define TEMP_BED_PIN       14   // ANALOG NUMBERING
+#define TEMP_BED_PIN       15//14   // ANALOG NUMBERING
 
 #ifdef NUM_SERVOS
   #define SERVO0_PIN         11
