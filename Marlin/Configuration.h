@@ -73,7 +73,7 @@ Here are some standard links for getting your machine calibrated:
 
 // Optional custom name for your RepStrap or other custom machine
 // Displayed in the LCD "Ready" message
-// #define CUSTOM_MACHINE_NAME "3D Printer"
+#define CUSTOM_MACHINE_NAME "Белый принтер"
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
@@ -635,14 +635,14 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 // Define your display language below. Replace (en) with your language code and uncomment.
 // en, pl, fr, de, es, ru, bg, it, pt, pt-br, fi, an, nl, ca, eu, kana, kana_utf8, cn, test
 // See also language.h
-#define LANGUAGE_INCLUDE GENERATE_LANGUAGE_INCLUDE(en)
+#define LANGUAGE_INCLUDE GENERATE_LANGUAGE_INCLUDE(ru)
 
 // Choose ONE of these 3 charsets. This has to match your hardware. Ignored for full graphic display.
 // To find out what type you have - compile with (test) - upload - click to get the menu. You'll see two typical lines from the upper half of the charset.
 // See also documentation/LCDLanguageFont.md
-  #define DISPLAY_CHARSET_HD44780_JAPAN        // this is the most common hardware
+  //#define DISPLAY_CHARSET_HD44780_JAPAN        // this is the most common hardware
   //#define DISPLAY_CHARSET_HD44780_WESTERN
-  //#define DISPLAY_CHARSET_HD44780_CYRILLIC
+  #define DISPLAY_CHARSET_HD44780_CYRILLIC
 
 //#define ULTRA_LCD  //general LCD support, also 16x2
 //#define DOGLCD  // Support for SPI LCD 128x64 (Controller ST7565R graphic Display Family)
