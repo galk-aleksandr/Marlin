@@ -440,7 +440,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
 // @section bedlevel
 
-//#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
+#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
 #define Z_PROBE_REPEATABILITY_TEST  // If not commented out, Z-Probe Repeatability test will be included if Auto Bed Leveling is Enabled.
 
 #ifdef ENABLE_AUTO_BED_LEVELING
@@ -490,7 +490,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
   // X and Y offsets must be integers
   #define X_PROBE_OFFSET_FROM_EXTRUDER -41     // Probe on: -left  +right
   #define Y_PROBE_OFFSET_FROM_EXTRUDER -23//-23.5     // Probe on: -front +behind
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER -1.7  // -below (always!)
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER 0  // -below (always!)
 
   #define Z_RAISE_BEFORE_HOMING 3       // (in mm) Raise Z before homing (G28) for Probe Clearance.
                                         // Be sure you have this distance over your Z_MAX_POS in case
