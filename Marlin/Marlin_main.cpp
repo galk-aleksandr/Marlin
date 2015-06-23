@@ -1202,7 +1202,7 @@ static void setup_for_endstop_move() {
       feedrate = homing_feedrate[Z_AXIS];
 
       // Move down until the probe (or endstop?) is triggered
-      float zPosition = -10;
+      float zPosition = -Z_MAX_POS;
       line_to_z(zPosition);
       st_synchronize();
 
