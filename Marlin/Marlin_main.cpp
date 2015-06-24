@@ -1261,9 +1261,13 @@ static void setup_for_endstop_move() {
 
       current_position[X_AXIS] = x;
       current_position[Y_AXIS] = y;
+      #ifdef ENDSTOPS_ONLY_FOR_HOMING
+        if (axis_known_position[X_AXIS] && axis_known_position[Y_AXIS]) enable_endstops(false);
+      #endif
       line_to_current_position();
       st_synchronize();
 
+      enable_endstops(true); // It is required for the subsequent call to this function and will be disabled after complex of blocking movements
     #endif
 
     feedrate = oldFeedRate;
