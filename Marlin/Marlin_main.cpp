@@ -1261,15 +1261,8 @@ static void setup_for_endstop_move() {
 
       current_position[X_AXIS] = x;
       current_position[Y_AXIS] = y;
-      #ifdef ENDSTOPS_ONLY_FOR_HOMING
-        enable_endstops(false);
-        line_to_current_position();
-        st_synchronize();
-        enable_endstops(true);
-      #else
-        line_to_current_position();
-        st_synchronize();
-      #endif
+      line_to_current_position();
+      st_synchronize();
 
     #endif
 
