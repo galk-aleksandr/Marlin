@@ -1196,7 +1196,7 @@ static void setup_for_endstop_move() {
     
       // move down slowly until you find the bed
       feedrate = homing_feedrate[Z_AXIS] / 4;
-      destination[Z_AXIS] = -10;
+      destination[Z_AXIS] = -(Z_MAX_POS - Z_MIN_POS); // if Z not known position, travel to probe may be long
       prepare_move_raw(); // this will also set_current_to_destination
       st_synchronize();
       endstops_hit_on_purpose(); // clear endstop hit flags
@@ -1213,7 +1213,7 @@ static void setup_for_endstop_move() {
       feedrate = homing_feedrate[Z_AXIS];
 
       // Move down until the probe (or endstop?) is triggered
-      float zPosition = -Z_MAX_POS;
+      float zPosition = -(Z_MAX_POS - Z_MIN_POS); // if Z not known position, travel to probe may be long
       line_to_z(zPosition);
       st_synchronize();
 
