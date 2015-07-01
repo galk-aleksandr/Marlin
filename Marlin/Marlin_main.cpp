@@ -2426,6 +2426,7 @@ inline void gcode_G28() {
   // For manual leveling move back to 0,0
   #ifdef MESH_BED_LEVELING
     if (mbl_was_active) {
+      /* ???
       current_position[X_AXIS] = mbl.get_x(0);
       current_position[Y_AXIS] = mbl.get_y(0);
       set_destination_to_current();
@@ -2434,6 +2435,7 @@ inline void gcode_G28() {
       st_synchronize();
       current_position[Z_AXIS] = MESH_HOME_SEARCH_Z;
       sync_plan_position();
+      */
       mbl.active = 1;
     }
   #endif
@@ -2515,6 +2517,10 @@ inline void gcode_G28() {
         if (probe_point == 0) {
           // Set Z to a positive value before recording the first Z.
           current_position[Z_AXIS] = MESH_HOME_SEARCH_Z;
+          #if HAS_FSR_SENSOR
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder);
+            st_synchronize();
+          #endif
           sync_plan_position();
         }
         else {
@@ -2523,6 +2529,12 @@ inline void gcode_G28() {
           iy = (probe_point - 1) / MESH_NUM_X_POINTS;
           if (iy & 1) ix = (MESH_NUM_X_POINTS - 1) - ix; // zig-zag
           mbl.set_z(ix, iy, current_position[Z_AXIS]);
+          SERIAL_PROTOCOLPGM("X,Y: ");
+          SERIAL_PROTOCOL(ix);
+          SERIAL_PROTOCOL(',');
+          SERIAL_PROTOCOL(iy);
+          SERIAL_PROTOCOLPGM("\nMeasured point: ");
+          SERIAL_PROTOCOLLN(current_position[Z_AXIS]);
           current_position[Z_AXIS] = MESH_HOME_SEARCH_Z;
           plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder);
           st_synchronize();
@@ -2534,8 +2546,13 @@ inline void gcode_G28() {
           if (iy & 1) ix = (MESH_NUM_X_POINTS - 1) - ix; // zig-zag
           current_position[X_AXIS] = mbl.get_x(ix);
           current_position[Y_AXIS] = mbl.get_y(iy);
-          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder);
-          st_synchronize();
+          #if HAS_FSR_SENSOR
+            run_fsr_z_probe();
+            enqueuecommands_P(PSTR("G29 S2"));
+          #else
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder);
+            st_synchronize();
+          #endif
           probe_point++;
         }
         else {
@@ -2543,7 +2560,7 @@ inline void gcode_G28() {
           SERIAL_PROTOCOLLNPGM("Mesh probing done.");
           probe_point = -1;
           mbl.active = 1;
-          enqueuecommands_P(PSTR("G28"));
+//          enqueuecommands_P(PSTR("G28"));
         }
         break;
 
