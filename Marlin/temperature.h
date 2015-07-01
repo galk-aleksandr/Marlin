@@ -39,6 +39,10 @@ void manage_heater(); //it is critical that this is called periodically.
  int widthFil_to_size_ratio();
 #endif
 
+#ifdef FSR_SENSOR
+  extern int raw_FSR_sample;
+#endif
+
 // low level conversion routines
 // do not use these routines and variables outside of temperature.cpp
 extern int target_temperature[4];  
@@ -95,6 +99,9 @@ FORCE_INLINE float degBed() { return current_temperature_bed; }
 
 FORCE_INLINE float degTargetHotend(uint8_t extruder) { return target_temperature[extruder]; }
 FORCE_INLINE float degTargetBed() { return target_temperature_bed; }
+#ifdef FSR_SENSOR
+  FORCE_INLINE int rawFSRSample() { return raw_FSR_sample; };
+#endif
 
 #ifdef THERMAL_PROTECTION_HOTENDS
   void start_watching_heater(int e=0);

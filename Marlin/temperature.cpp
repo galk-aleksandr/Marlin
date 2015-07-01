@@ -73,6 +73,10 @@ unsigned char soft_pwm_bed;
   int current_raw_filwidth = 0;  //Holds measured filament diameter - one extruder only
 #endif  
 
+#if HAS_FSR_SENSOR
+  int raw_FSR_sample = 0;
+#endif
+
 #if defined(THERMAL_PROTECTION_HOTENDS) || defined(THERMAL_PROTECTION_BED)
   enum TRState { TRReset, TRInactive, TRFirstHeating, TRStable, TRRunaway };
   void thermal_runaway_protection(TRState *state, millis_t *timer, float temperature, float target_temperature, int heater_id, int period_seconds, int hysteresis_degc);
@@ -1189,6 +1193,8 @@ enum TempState {
   MeasureTemp_3,
   Prepare_FILWIDTH,
   Measure_FILWIDTH,
+  Prepare_FSR,
+  Measure_FSR,
   StartupDelay // Startup, delay initial temp reading a tiny bit so the hardware can settle
 };
 
@@ -1512,6 +1518,20 @@ ISR(TIMER0_COMPB_vect) {
           raw_filwidth_value -= (raw_filwidth_value>>7);  //multiply raw_filwidth_value by 127/128
           raw_filwidth_value += ((unsigned long)ADC<<7);  //add new ADC reading
         }
+      #endif
+      temp_state = Prepare_FSR;
+      break;
+
+    case Prepare_FSR:
+      #if HAS_FSR_SENSOR
+        START_ADC(FSR_PIN);
+      #endif
+      lcd_buttons_update();
+      temp_state = Measure_FSR;
+      break;
+    case Measure_FSR:
+      #if HAS_FSR_SENSOR
+          raw_FSR_sample = ADC;
       #endif
       temp_state = PrepareTemp_0;
       temp_count++;

@@ -67,6 +67,12 @@
   #define FILWIDTH_PIN        5
 #endif
 
+#ifdef FSR_SENSOR
+    //define analog pin for the FSR touch sensor input
+    //Use the RAMPS 1.4 Analog input 10 on the AUX2 connector
+      #define FSR_PIN        10
+#endif
+
 #ifdef Z_PROBE_ENDSTOP
   // Define a pin to use as the signal pin on Arduino for the Z_PROBE endstop.
   #define Z_PROBE_PIN 32

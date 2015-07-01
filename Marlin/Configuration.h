@@ -415,6 +415,18 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 #endif
 
 //===========================================================================
+//========================= FSR touch Sensor ================================
+//===========================================================================
+#define FSR_SENSOR // Uncomment for use FSR touch Sensor for bed autoleveling
+                   // Sensor can measure the force touch on the head or on the bed
+                   // In RAMPS uses Analog input 10 on the AUX2 connector.
+                   // Can be changed in pins file. For other boards pin definition (FSR_PIN) should be made.
+                   // It is assumed that when raw value > 1000 = measured force very low  (G29 will stop with error 'FSR Force LOW')
+                   //                   500 < raw value < 1000 = correct measured force
+                   //                         raw value < 500  = measured force very high (G29 will stop with error 'FSR force HIGH')
+#define FSR_THRESHOLD 10 // Sensitivity for FSR_SENSOR, lower value is more sensitivity
+
+//===========================================================================
 //=========================== Manual Bed Leveling ===========================
 //===========================================================================
 

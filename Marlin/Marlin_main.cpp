@@ -1119,6 +1119,78 @@ static void setup_for_endstop_move() {
   enable_endstops(true);
 }
 
+#if HAS_FSR_SENSOR
+bool touching_print_surface(int threshold) { return rawFSRSample() < threshold; }
+
+static void run_fsr_z_probe() {
+      float zPosition = current_position[Z_AXIS];
+      float step = 0.1;
+      int direction = -1;
+      int num_fsr_probe = 0;
+      float measured_fsr_position = 0;
+      // Consider the glass touched if the raw ADC value is reduced by 5% or more.
+      int analog_fsr_untouched = rawFSRSample();
+      int threshold = analog_fsr_untouched * 95L / 100;
+      if( analog_fsr_untouched < 500 ) {
+          SERIAL_ERROR_START;
+          SERIAL_ERRORLNPGM("Zprobe switched off. Force from FSR sensor is too high !");
+          LCD_ALERTMESSAGEPGM("Err: FSR FORCE HIGH");
+      #ifdef Z_SAFE_HOMING
+          for ( int i=5; i--; lcd_update())
+          {
+            delay(200);
+          }
+          cli(); // disable interrupts
+          suicide();
+          while(1) { /* Intentionally left empty */ } // Wait for reset
+      #endif
+      }
+      if( analog_fsr_untouched > 1000 ) {
+          SERIAL_ERROR_START;
+          SERIAL_ERRORLNPGM("Zprobe switched off. Force from FSR sensor is too low !");
+          LCD_ALERTMESSAGEPGM("Err: FSR FORCE LOW");
+      #ifdef Z_SAFE_HOMING
+          for ( int i=5; i--; lcd_update())
+          {
+            delay(200);
+          }
+          cli(); // disable interrupts
+          suicide();
+          while(1) { /* Intentionally left empty */ } // Wait for reset
+      #endif
+      }
+      while (!touching_print_surface(threshold)) {
+        zPosition += step * direction;
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate, active_extruder);
+        st_synchronize();
+      }
+      while (num_fsr_probe < 2) {
+        num_fsr_probe++;
+        zPosition += 0.1;
+        feedrate = homing_feedrate[Z_AXIS];
+        step = 0.01;
+        direction = -1;
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate, active_extruder);
+        st_synchronize();
+        while (step > 0.005) {
+          if (touching_print_surface(threshold)) {
+            direction =  1;
+            step *= 0.8;
+            feedrate *= 0.8;
+          } else {
+            direction =  -1;
+          }
+          zPosition += step * direction;
+          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate, active_extruder);
+          st_synchronize();
+        }
+        SERIAL_ECHOPGM("zPosition="); SERIAL_ECHOLN(zPosition);
+        measured_fsr_position += zPosition;
+      }
+      current_position[Z_AXIS] = measured_fsr_position / num_fsr_probe;
+}
+#endif
+
 #ifdef ENABLE_AUTO_BED_LEVELING
 
   #ifdef DELTA
@@ -1214,6 +1286,9 @@ static void setup_for_endstop_move() {
 
       // Move down until the probe (or endstop?) is triggered
       float zPosition = -(Z_MAX_POS - Z_MIN_POS); // if Z not known position, travel to probe may be long
+    #if HAS_FSR_SENSOR
+      run_fsr_z_probe();
+    #else //!HAS_FSR_SENSOR
       line_to_z(zPosition);
       st_synchronize();
 
@@ -1237,6 +1312,7 @@ static void setup_for_endstop_move() {
 
       // Get the current stepper position after bumping an endstop
       current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
+    #endif // HAS_FSR_SENSOR
       sync_plan_position();
       
     #endif // !DELTA
@@ -1516,6 +1592,10 @@ static void setup_for_endstop_move() {
       SERIAL_PROTOCOL_F(y, 3);
       SERIAL_PROTOCOLPGM(" Z: ");
       SERIAL_PROTOCOL_F(measured_z, 3);
+      #if HAS_FSR_SENSOR
+       SERIAL_PROTOCOLPGM(" FSR: ");
+       SERIAL_PROTOCOL(rawFSRSample());
+      #endif
       SERIAL_EOL;
     }
     return measured_z;
@@ -3963,6 +4043,10 @@ inline void gcode_M119() {
   #if HAS_Z_MAX
     SERIAL_PROTOCOLPGM(MSG_Z_MAX);
     SERIAL_PROTOCOLLN(((READ(Z_MAX_PIN)^Z_MAX_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+  #endif
+  #if HAS_FSR_SENSOR
+    SERIAL_PROTOCOLPGM("FSR raw data: ");
+    SERIAL_PROTOCOLLN(rawFSRSample());
   #endif
   #if HAS_Z2_MAX
     SERIAL_PROTOCOLPGM(MSG_Z2_MAX);
