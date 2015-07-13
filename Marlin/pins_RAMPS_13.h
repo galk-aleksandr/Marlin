@@ -148,6 +148,7 @@
 #ifdef ULTRA_LCD
 
   #ifdef NEWPANEL
+
     #ifdef PANEL_ONE
       #define LCD_PINS_RS 40
       #define LCD_PINS_ENABLE 42
@@ -163,7 +164,6 @@
       #define LCD_PINS_D6 27
       #define LCD_PINS_D7 29
     #endif
-
 
     #ifdef REPRAP_DISCOUNT_SMART_CONTROLLER
       #define BEEPER 37
@@ -226,8 +226,8 @@
       #endif
 
     #endif
-  #else // Old-style panel with shift register
-    // Arduino pin witch triggers an piezzo beeper
+  #else // !NEWPANEL (Old-style panel with shift register)
+    // Arduino pin to trigger a piezzo beeper
     #define BEEPER 33   // No Beeper added
 
     // Buttons are attached to a shift register
@@ -243,7 +243,9 @@
     #define LCD_PINS_D5 25
     #define LCD_PINS_D6 27
     #define LCD_PINS_D7 29
-  #endif
+
+  #endif // !NEWPANEL
+
 #endif // ULTRA_LCD
 
 // SPI for Max6675 Thermocouple

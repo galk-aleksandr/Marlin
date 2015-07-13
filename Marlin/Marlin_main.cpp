@@ -580,6 +580,17 @@ void servo_init() {
 }
 
 /**
+ * Stepper Reset (RigidBoard, et.al.)
+ */
+#if HAS_STEPPER_RESET
+  void disableStepperDrivers() {
+    pinMode(STEPPER_RESET_PIN, OUTPUT);
+    digitalWrite(STEPPER_RESET_PIN, LOW);  // drive it down to hold in reset motor driver chips
+  }
+  void enableStepperDrivers() { pinMode(STEPPER_RESET_PIN, INPUT); }  // set to input, which allows it to be pulled high by pullups
+#endif
+
+/**
  * Marlin entry-point: Set up before the program loop
  *  - Set up the kill pin, filament runout, power hold
  *  - Start the serial port
@@ -601,6 +612,11 @@ void setup() {
   setup_killpin();
   setup_filrunoutpin();
   setup_powerhold();
+
+  #if HAS_STEPPER_RESET
+    disableStepperDrivers();
+  #endif
+
   MYSERIAL.begin(BAUDRATE);
   SERIAL_PROTOCOLLNPGM("start");
   SERIAL_ECHO_START;
@@ -654,6 +670,10 @@ void setup() {
 
   #if HAS_CONTROLLERFAN
     SET_OUTPUT(CONTROLLERFAN_PIN); //Set pin used for driver cooling fan
+  #endif
+
+  #if HAS_STEPPER_RESET
+    enableStepperDrivers();
   #endif
 
   #ifdef DIGIPOT_I2C
@@ -2761,7 +2781,7 @@ inline void gcode_G28() {
       #ifdef DELTA
         delta_grid_spacing[0] = xGridSpacing;
         delta_grid_spacing[1] = yGridSpacing;
-        float z_offset = Z_PROBE_OFFSET_FROM_EXTRUDER;
+        float z_offset = zprobe_zoffset;
         if (code_seen(axis_codes[Z_AXIS])) z_offset += code_value();
       #else // !DELTA
         // solve the plane equation ax + by + d = z
@@ -2936,10 +2956,11 @@ inline void gcode_G28() {
         float x_tmp = current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER,
               y_tmp = current_position[Y_AXIS] + Y_PROBE_OFFSET_FROM_EXTRUDER,
               z_tmp = current_position[Z_AXIS],
-              real_z = (float)st_get_position(Z_AXIS) / axis_steps_per_unit[Z_AXIS];  //get the real Z (since the auto bed leveling is already correcting the plane)
+              real_z = st_get_position_mm(Z_AXIS);  //get the real Z (since the auto bed leveling is already correcting the plane)
 
         apply_rotation_xyz(plan_bed_level_matrix, x_tmp, y_tmp, z_tmp); // Apply the correction sending the probe offset
-        current_position[Z_AXIS] += z_tmp - real_z;                     // The difference is added to current position and sent to planner.
+        //line below controls z probe offset, zprobe_zoffset is the actual offset that can be modified via m851 or is read from EEPROM
+        current_position[Z_AXIS] = z_tmp - real_z - zprobe_zoffset; // The difference is added to current position and sent to planner.
         sync_plan_position();
       }
     #endif // !DELTA
@@ -3739,17 +3760,17 @@ inline void gcode_M109() {
 inline void gcode_M111() {
   marlin_debug_flags = code_seen('S') ? code_value_short() : DEBUG_INFO|DEBUG_COMMUNICATION;
   
-  SERIAL_ECHO_START;
-  if (marlin_debug_flags & DEBUG_ECHO) SERIAL_ECHOLNPGM(MSG_DEBUG_ECHO);
+  if (marlin_debug_flags & DEBUG_ECHO) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM(MSG_DEBUG_ECHO);
+  }
   // FOR MOMENT NOT ACTIVE
   //if (marlin_debug_flags & DEBUG_INFO) SERIAL_ECHOLNPGM(MSG_DEBUG_INFO);
   //if (marlin_debug_flags & DEBUG_ERRORS) SERIAL_ECHOLNPGM(MSG_DEBUG_ERRORS);
   if (marlin_debug_flags & DEBUG_DRYRUN) {
+    SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM(MSG_DEBUG_DRYRUN);
-    setTargetBed(0);
-    for (int8_t cur_hotend = 0; cur_hotend < EXTRUDERS; ++cur_hotend) {
-      setTargetHotend(0, cur_hotend);
-    }
+    disable_all_heaters();
   }
 }
 
@@ -3992,11 +4013,11 @@ inline void gcode_M114() {
   SERIAL_PROTOCOL(current_position[E_AXIS]);
 
   SERIAL_PROTOCOLPGM(MSG_COUNT_X);
-  SERIAL_PROTOCOL(float(st_get_position(X_AXIS))/axis_steps_per_unit[X_AXIS]);
+  SERIAL_PROTOCOL(st_get_position_mm(X_AXIS));
   SERIAL_PROTOCOLPGM(" Y:");
-  SERIAL_PROTOCOL(float(st_get_position(Y_AXIS))/axis_steps_per_unit[Y_AXIS]);
+  SERIAL_PROTOCOL(st_get_position_mm(Y_AXIS));
   SERIAL_PROTOCOLPGM(" Z:");
-  SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
+  SERIAL_PROTOCOL(st_get_position_mm(Z_AXIS));
 
   SERIAL_EOL;
 
@@ -5094,14 +5115,15 @@ inline void gcode_M503() {
         lcd_update();
       #else
         current_position[E_AXIS] += AUTO_FILAMENT_CHANGE_LENGTH;
-        plan_buffer_line(target[X_AXIS],target[Y_AXIS],target[Z_MAX_ENDSTOP_INVERTING],current_position[E_AXIS],AUTO_FILAMENT_CHANGE_FEEDRATE/60,active_extruder);
+        destination[E_AXIS] = current_position[E_AXIS];
+        line_to_destination(AUTO_FILAMENT_CHANGE_FEEDRATE);
         st_synchronize();
       #endif
     } // while(!lcd_clicked)
     lcd_quick_feedback(); // click sound feedback
 
     #ifdef AUTO_FILAMENT_CHANGE
-      current_position[E_AXIS]= 0;
+      current_position[E_AXIS] = 0;
       st_synchronize();
     #endif
           
@@ -5393,13 +5415,13 @@ void process_next_command() {
   //  - Bypass N[0-9][0-9]*[ ]*
   //  - Overwrite * with nul to mark the end
   while (*current_command == ' ') ++current_command;
-  if (*current_command == 'N' && current_command[1] >= '0' && current_command[1] <= '9') {
-    current_command += 2; // skip N[0-9]
+  if (*current_command == 'N' && ((current_command[1] >= '0' && current_command[1] <= '9') || current_command[1] == '-')) {
+    current_command += 2; // skip N[-0-9]
     while (*current_command >= '0' && *current_command <= '9') ++current_command; // skip [0-9]*
     while (*current_command == ' ') ++current_command; // skip [ ]*
   }
   char *starpos = strchr(current_command, '*');  // * should always be the last parameter
-  if (starpos) *starpos = '\0';
+  if (starpos) while (*starpos == ' ' || *starpos == '*') *starpos-- = '\0'; // nullify '*' and ' '
 
   // Get the command code, which must be G, M, or T
   char command_code = *current_command;
@@ -5970,7 +5992,7 @@ void clamp_to_software_endstops(float target[3]) {
     
     float negative_z_offset = 0;
     #ifdef ENABLE_AUTO_BED_LEVELING
-      if (Z_PROBE_OFFSET_FROM_EXTRUDER < 0) negative_z_offset += Z_PROBE_OFFSET_FROM_EXTRUDER;
+      if (zprobe_zoffset < 0) negative_z_offset += zprobe_zoffset;
       if (home_offset[Z_AXIS] < 0) negative_z_offset += home_offset[Z_AXIS];
     #endif
     NOLESS(target[Z_AXIS], min_pos[Z_AXIS] + negative_z_offset);
