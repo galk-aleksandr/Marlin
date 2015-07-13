@@ -1207,7 +1207,7 @@ static void run_fsr_z_probe() {
         SERIAL_ECHOPGM("zPosition="); SERIAL_ECHOLN(zPosition);
         measured_fsr_position += zPosition;
       }
-      current_position[Z_AXIS] = measured_fsr_position / num_fsr_probe + FSR_OFFSET_FROM_EXTRUDER;
+      current_position[Z_AXIS] = (measured_fsr_position + FSR_OFFSET_FROM_EXTRUDER) / num_fsr_probe;
 }
 #endif
 
