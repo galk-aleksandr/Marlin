@@ -1130,7 +1130,7 @@ static void run_fsr_z_probe() {
       float measured_fsr_position = 0;
       // Consider the glass touched if the raw ADC value is reduced by 5% or more.
       int analog_fsr_untouched = rawFSRSample();
-      int threshold = analog_fsr_untouched * 95L / 100;
+      int threshold = analog_fsr_untouched - FSR_THRESHOLD;
       if( analog_fsr_untouched < 500 ) {
           SERIAL_ERROR_START;
           SERIAL_ERRORLNPGM("Zprobe switched off. Force from FSR sensor is too high !");
@@ -1145,7 +1145,7 @@ static void run_fsr_z_probe() {
           while(1) { /* Intentionally left empty */ } // Wait for reset
       #endif
       }
-      if( analog_fsr_untouched > 1000 ) {
+      if( analog_fsr_untouched > 1020 ) {
           SERIAL_ERROR_START;
           SERIAL_ERRORLNPGM("Zprobe switched off. Force from FSR sensor is too low !");
           LCD_ALERTMESSAGEPGM("Err: FSR FORCE LOW");
@@ -1187,7 +1187,7 @@ static void run_fsr_z_probe() {
         SERIAL_ECHOPGM("zPosition="); SERIAL_ECHOLN(zPosition);
         measured_fsr_position += zPosition;
       }
-      current_position[Z_AXIS] = measured_fsr_position / num_fsr_probe;
+      current_position[Z_AXIS] = measured_fsr_position / num_fsr_probe + FSR_OFFSET_FROM_EXTRUDER;
 }
 #endif
 

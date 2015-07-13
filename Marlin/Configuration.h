@@ -425,6 +425,8 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
                    //                   500 < raw value < 1000 = correct measured force
                    //                         raw value < 500  = measured force very high (G29 will stop with error 'FSR force HIGH')
 #define FSR_THRESHOLD 10 // Sensitivity for FSR_SENSOR, lower value is more sensitivity
+#define FSR_THRESHOLD 30 // Sensitivity for FSR_SENSOR, lower value is more sensitivity
+#define FSR_OFFSET_FROM_EXTRUDER 0.25 // positive value if touch stop nozzle near bed level and need move up for zero level
 
 //===========================================================================
 //=========================== Manual Bed Leveling ===========================
