@@ -2498,6 +2498,9 @@ inline void gcode_G28() {
             }
             SERIAL_EOL;
           }
+          if (!axis_known_position[X_AXIS] ||!axis_known_position[Y_AXIS]||!axis_known_position[Z_AXIS]) {
+            enqueuecommands_P(PSTR("G28"));
+          }
         }
         else
           SERIAL_PROTOCOLLNPGM("Mesh bed leveling not active.");
