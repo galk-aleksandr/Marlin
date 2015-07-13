@@ -431,21 +431,21 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 //=========================== Manual Bed Leveling ===========================
 //===========================================================================
 
-// #define MANUAL_BED_LEVELING  // Add display menu option for bed leveling
-// #define MESH_BED_LEVELING    // Enable mesh bed leveling
+//#define MANUAL_BED_LEVELING  // Add display menu option for bed leveling
+//#define MESH_BED_LEVELING    // Enable mesh bed leveling
 
 #ifdef MANUAL_BED_LEVELING
   #define MBL_Z_STEP 0.025  // Step size while manually probing Z axis
 #endif  // MANUAL_BED_LEVELING
 
 #ifdef MESH_BED_LEVELING
-  #define MESH_MIN_X 10
+  #define MESH_MIN_X 5
   #define MESH_MAX_X (X_MAX_POS - MESH_MIN_X)
-  #define MESH_MIN_Y 10
+  #define MESH_MIN_Y 5
   #define MESH_MAX_Y (Y_MAX_POS - MESH_MIN_Y)
-  #define MESH_NUM_X_POINTS 3  // Don't use more than 7 points per axis, implementation limited
-  #define MESH_NUM_Y_POINTS 3
-  #define MESH_HOME_SEARCH_Z 4  // Z after Home, bed somewhere below but above 0.0
+  #define MESH_NUM_X_POINTS 5  // Don't use more than 7 points per axis, implementation limited
+  #define MESH_NUM_Y_POINTS 5
+  #define MESH_HOME_SEARCH_Z 5  // Z after Home, bed somewhere below but above 0.0
 #endif  // MESH_BED_LEVELING
 
 //===========================================================================
@@ -665,7 +665,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 //#define SD_CHECK_AND_RETRY // Use CRC checks and retries on the SD communication
 //#define ENCODER_PULSES_PER_STEP 1 // Increase if you have a high resolution encoder
 //#define ENCODER_STEPS_PER_MENU_ITEM 5 // Set according to ENCODER_PULSES_PER_STEP or your liking
-#define ULTIMAKERCONTROLLER //as available from the Ultimaker online store.
+//#define ULTIMAKERCONTROLLER //as available from the Ultimaker online store.
 //#define ULTIPANEL  //the UltiPanel as on Thingiverse
 //#define LCD_FEEDBACK_FREQUENCY_DURATION_MS 100 // the duration the buzzer plays the UI feedback sound. ie Screen Click
 //#define LCD_FEEDBACK_FREQUENCY_HZ 1000         // this is the tone frequency the buzzer plays when on UI feedback. ie Screen Click
