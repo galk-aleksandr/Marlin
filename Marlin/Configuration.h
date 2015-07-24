@@ -424,8 +424,8 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
                    // It is assumed that when raw value > 1000 = measured force very low  (G29 will stop with error 'FSR Force LOW')
                    //                   500 < raw value < 1000 = correct measured force
                    //                         raw value < 500  = measured force very high (G29 will stop with error 'FSR force HIGH')
-#define FSR_THRESHOLD 30 // Sensitivity for FSR_SENSOR, lower value is more sensitivity
-#define FSR_OFFSET_FROM_EXTRUDER 0.25 // positive value if touch stop nozzle near bed level and need move up for zero level
+#define FSR_OFFSET_FROM_EXTRUDER 0.15 // positive value if touch stop nozzle near bed level and need move up for zero level
+#define FSR_PROBE_COUNT 2 // Numbers of probe for single point 
 
 //===========================================================================
 //=========================== Manual Bed Leveling ===========================
@@ -476,10 +476,10 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
   #ifdef AUTO_BED_LEVELING_GRID
 
-    #define LEFT_PROBE_BED_POSITION 50
-    #define RIGHT_PROBE_BED_POSITION 325
-    #define FRONT_PROBE_BED_POSITION 50
-    #define BACK_PROBE_BED_POSITION 240
+    #define LEFT_PROBE_BED_POSITION 0
+    #define RIGHT_PROBE_BED_POSITION (X_MAX_POS - LEFT_PROBE_BED_POSITION)
+    #define FRONT_PROBE_BED_POSITION 0
+    #define BACK_PROBE_BED_POSITION (Y_MAX_POS - FRONT_PROBE_BED_POSITION)
 
     #define MIN_PROBE_EDGE 10 // The probe square sides can be no smaller than this
 
@@ -502,8 +502,8 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
   // Offsets to the probe relative to the extruder tip (Hotend - Probe)
   // X and Y offsets must be integers
-  #define X_PROBE_OFFSET_FROM_EXTRUDER -41     // Probe on: -left  +right
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER -23//-23.5     // Probe on: -front +behind
+  #define X_PROBE_OFFSET_FROM_EXTRUDER 0//-41     // Probe on: -left  +right
+  #define Y_PROBE_OFFSET_FROM_EXTRUDER 0//-23//-23.5     // Probe on: -front +behind
   #define Z_PROBE_OFFSET_FROM_EXTRUDER 0  // -below (always!)
 
   #define Z_RAISE_BEFORE_HOMING 3       // (in mm) Raise Z before homing (G28) for Probe Clearance.

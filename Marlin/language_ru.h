@@ -3,6 +3,8 @@
  *
  * LCD Menu Messages
  * See also documentation/LCDLanguageFont.md
+ * Please discuss before send commits http://roboforum.ru/post332061.html
+ * Пожалуйста согласовывайте коммиты перед отправкой !
  *
  */
 #ifndef LANGUAGE_RU_H
@@ -13,6 +15,8 @@
 //#define SIMULATE_ROMFONT
 #define DISPLAY_CHARSET_ISO10646_5
 
+// обратите внимание : длинна сообщений в меню 18 символов
+// некоторые сообщения умышленно не переведены т.к. являются консольными и выдают ошибки в программах не поддерживающих utf8 (pronterface)
 #define WELCOME_MSG                         MACHINE_NAME " Готов."
 #define MSG_SD_INSERTED                     "Карта вставлена"
 #define MSG_SD_REMOVED                      "Карта извлечена"
@@ -42,9 +46,9 @@
 #define MSG_MOVE_Y                          "Движение по Y"
 #define MSG_MOVE_Z                          "Движение по Z"
 #define MSG_MOVE_E                          "Экструдер"
-#define MSG_MOVE_01MM                       "Движение XYZ 0.1mm"
-#define MSG_MOVE_1MM                        "Движение XYZ 1mm"
-#define MSG_MOVE_10MM                       "Движение XY 10mm"
+#define MSG_MOVE_01MM                       "Движение XYZ 0.1мм"
+#define MSG_MOVE_1MM                        "Движение XYZ 1мм"
+#define MSG_MOVE_10MM                       "Движение XY 10мм"
 #define MSG_LEVEL_BED                       "Калибровать стол"
 #define MSG_SPEED                           "Скорость"
 #define MSG_NOZZLE                          LCD_STR_THERMOMETER " Сопло"
@@ -75,14 +79,14 @@
 #define MSG_VTRAV_MIN                       "VTrav min"
 #define MSG_AMAX                            "Amax"
 #define MSG_A_RETRACT                       "A-втягивание"
-#define MSG_XSTEPS                          "X шаг/mm"
-#define MSG_YSTEPS                          "Y шаг/mm"
-#define MSG_ZSTEPS                          "Z шаг/mm"
-#define MSG_ESTEPS                          "E шаг/mm"
+#define MSG_XSTEPS                          "X шаг/мм"
+#define MSG_YSTEPS                          "Y шаг/мм"
+#define MSG_ZSTEPS                          "Z шаг/мм"
+#define MSG_ESTEPS                          "E шаг/мм"
 #define MSG_TEMPERATURE                     "Температура"
 #define MSG_MOTION                          "Механика"
 #define MSG_VOLUMETRIC                      "Пруток"
-#define MSG_VOLUMETRIC_ENABLED              "E в mm3"
+#define MSG_VOLUMETRIC_ENABLED              "E в мм3"
 #define MSG_FILAMENT_SIZE_EXTRUDER_0        "Диаметр прутка 1"
 #define MSG_FILAMENT_SIZE_EXTRUDER_1        "Диаметр прутка 2"
 #define MSG_FILAMENT_SIZE_EXTRUDER_2        "Диаметр прутка 3"
@@ -93,32 +97,32 @@
 #define MSG_REFRESH                         "Обновить"
 #define MSG_WATCH                           "Обзор"
 #define MSG_PREPARE                         "Действия"
-#define MSG_TUNE                            "Настройки"
+#define MSG_TUNE                            "Подстройки"
 #define MSG_PAUSE_PRINT                     "Пауза печати"
 #define MSG_RESUME_PRINT                    "Продолжить печать"
 #define MSG_STOP_PRINT                      "Остановить печать"
-#define MSG_CARD_MENU                       "Обзор SD карты"
-#define MSG_NO_CARD                         "Нет SD карты"
+#define MSG_CARD_MENU                       "Обзор карты"
+#define MSG_NO_CARD                         "Нет карты"
 #define MSG_DWELL                           "Сон..."
-#define MSG_USERWAIT                        "Ожиданиие"
+#define MSG_USERWAIT                        "Ожидание"
 #define MSG_RESUMING                        "Возобновление..."
 #define MSG_PRINT_ABORTED                   "Отмена печати"
 #define MSG_NO_MOVE                         "Нет движения."
 #define MSG_KILLED                          "УБИТО."
 #define MSG_STOPPED                         "ОСТАНОВЛЕНО."
-#define MSG_CONTROL_RETRACT                 "Втягивание mm"
-#define MSG_CONTROL_RETRACT_SWAP            "Втяг. смены mm"
+#define MSG_CONTROL_RETRACT                 "Втягивание мм"
+#define MSG_CONTROL_RETRACT_SWAP            "Втяг. смены мм"
 #define MSG_CONTROL_RETRACTF                "Втягивание V"
-#define MSG_CONTROL_RETRACT_ZLIFT           "Втяг. прыжка mm"
-#define MSG_CONTROL_RETRACT_RECOVER         "Возврат +mm"
-#define MSG_CONTROL_RETRACT_RECOVER_SWAP    "Возврат смены +mm"
+#define MSG_CONTROL_RETRACT_ZLIFT           "Втяг. прыжка мм"
+#define MSG_CONTROL_RETRACT_RECOVER         "Возврат +мм"
+#define MSG_CONTROL_RETRACT_RECOVER_SWAP    "Возврат смены +мм"
 #define MSG_CONTROL_RETRACT_RECOVERF        "Возврат  V"
 #define MSG_AUTORETRACT                     "Авто Втягивание"
 #define MSG_FILAMENTCHANGE                  "Смена прутка"
-#define MSG_INIT_SDCARD                     "Найти SD карту"
-#define MSG_CNG_SDCARD                      "Смена SD карты"
+#define MSG_INIT_SDCARD                     "Найти карту"
+#define MSG_CNG_SDCARD                      "Смена карты"
 #define MSG_ZPROBE_OUT                      "Z датчик вне стола"
-#define MSG_POSITION_UNKNOWN                "Паркуй X/Y перед Z"
+#define MSG_POSITION_UNKNOWN                "Home X/Y before Z" // не переводить, консольное сообщение
 #define MSG_ZPROBE_ZOFFSET                  "Смещение Z"
 #define MSG_BABYSTEP_X                      "Babystep X"
 #define MSG_BABYSTEP_Y                      "Babystep Y"

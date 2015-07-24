@@ -41,6 +41,7 @@ void manage_heater(); //it is critical that this is called periodically.
 
 #ifdef FSR_SENSOR
   extern int raw_FSR_sample;
+  extern int raw_FSR_noise;
 #endif
 
 // low level conversion routines
@@ -101,6 +102,9 @@ FORCE_INLINE float degTargetHotend(uint8_t extruder) { return target_temperature
 FORCE_INLINE float degTargetBed() { return target_temperature_bed; }
 #ifdef FSR_SENSOR
   FORCE_INLINE int rawFSRSample() { return raw_FSR_sample; };
+  FORCE_INLINE int rawFSRnoise() { return raw_FSR_noise; };
+  void enable_fsr_check_noise (bool check); // Enable/disable fsr noise checking
+  void clear_fsr_noise (); // empty collected FSR noise result
 #endif
 
 #ifdef THERMAL_PROTECTION_HOTENDS

@@ -75,6 +75,9 @@ unsigned char soft_pwm_bed;
 
 #if HAS_FSR_SENSOR
   int raw_FSR_sample = 0;
+  int raw_FSR_max_sample = 0;
+  int raw_FSR_min_sample = 1024;
+  int raw_FSR_noise = 0;
 #endif
 
 #if defined(THERMAL_PROTECTION_HOTENDS) || defined(THERMAL_PROTECTION_BED)
@@ -185,6 +188,10 @@ static void updateTemperaturesFromRawValues();
 
 #ifdef FILAMENT_SENSOR
   static int meas_shift_index;  //used to point to a delayed sample in buffer for filament width sensor
+#endif
+  
+#if HAS_FSR_SENSOR
+  static bool fsr_check_noise = false;
 #endif
 
 #ifdef HEATER_0_USES_MAX6675
@@ -822,6 +829,10 @@ static void updateTemperaturesFromRawValues() {
 
 #endif
 
+#if HAS_FSR_SENSOR
+  void enable_fsr_check_noise(bool check) { fsr_check_noise = check; }
+  void clear_fsr_noise() { raw_FSR_max_sample=0; raw_FSR_min_sample=1024; raw_FSR_noise=0; }
+#endif
 
 /**
  * Initialize the temperature manager
@@ -1532,6 +1543,19 @@ ISR(TIMER0_COMPB_vect) {
     case Measure_FSR:
       #if HAS_FSR_SENSOR
           raw_FSR_sample = ADC;
+          if (fsr_check_noise) 
+          {
+            if (raw_FSR_sample > raw_FSR_max_sample) 
+              { 
+                raw_FSR_max_sample = raw_FSR_sample;
+                raw_FSR_noise = raw_FSR_max_sample - raw_FSR_min_sample;
+              }
+            if (raw_FSR_sample < raw_FSR_min_sample) 
+              {
+                raw_FSR_min_sample=raw_FSR_sample;
+                raw_FSR_noise = raw_FSR_max_sample - raw_FSR_min_sample;
+              }
+          };
       #endif
       temp_state = PrepareTemp_0;
       temp_count++;

@@ -19,7 +19,7 @@
  *
  * About Marlin
  *
- * This firmware is a mashup between Sprinter and grbl.
+ * This firmware is a mashuxp between Sprinter and grbl.
  *  - https://github.com/kliment/Sprinter
  *  - https://github.com/simen/grbl/tree
  *
@@ -1144,22 +1144,25 @@ bool touching_print_surface(int threshold) { return rawFSRSample() < threshold; 
 
 static void run_fsr_z_probe() {
       float zPosition = current_position[Z_AXIS];
+      feedrate = homing_feedrate[Z_AXIS] / 60;
       float step = 0.1;
       int direction = -1;
       int num_fsr_probe = 0;
       float measured_fsr_position = 0;
-      // Consider the glass touched if the raw ADC value is reduced by 5% or more.
+      enable_fsr_check_noise(false);
       int analog_fsr_untouched = rawFSRSample();
-      int threshold = analog_fsr_untouched - FSR_THRESHOLD;
-      if( analog_fsr_untouched < 500 ) {
+      int noise = rawFSRnoise();
+      if (noise == 0 ) { noise = 10 ;};
+      int threshold = analog_fsr_untouched - noise - 1;
+      //SERIAL_ECHOPGM("analog_fsr_untouched=");SERIAL_ECHOLN(analog_fsr_untouched);
+      //SERIAL_ECHOPGM("noise=");SERIAL_ECHOLN(noise);
+      //SERIAL_ECHOPGM("threshold=");SERIAL_ECHOLN(threshold);
+            if( analog_fsr_untouched < 500 ) {
           SERIAL_ERROR_START;
           SERIAL_ERRORLNPGM("Zprobe switched off. Force from FSR sensor is too high !");
           LCD_ALERTMESSAGEPGM("Err: FSR FORCE HIGH");
       #ifdef Z_SAFE_HOMING
-          for ( int i=5; i--; lcd_update())
-          {
-            delay(200);
-          }
+          for ( int i=5; i--; lcd_update()) {delay(200);}
           cli(); // disable interrupts
           suicide();
           while(1) { /* Intentionally left empty */ } // Wait for reset
@@ -1170,44 +1173,75 @@ static void run_fsr_z_probe() {
           SERIAL_ERRORLNPGM("Zprobe switched off. Force from FSR sensor is too low !");
           LCD_ALERTMESSAGEPGM("Err: FSR FORCE LOW");
       #ifdef Z_SAFE_HOMING
-          for ( int i=5; i--; lcd_update())
-          {
-            delay(200);
-          }
+          for ( int i=5; i--; lcd_update()) {delay(200);}
           cli(); // disable interrupts
           suicide();
           while(1) { /* Intentionally left empty */ } // Wait for reset
       #endif
       }
+      enable_endstops(false);
       while (!touching_print_surface(threshold)) {
         zPosition += step * direction;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate, active_extruder);
         st_synchronize();
       }
-      while (num_fsr_probe < 2) {
-        num_fsr_probe++;
-        zPosition += 0.1;
-        feedrate = homing_feedrate[Z_AXIS];
-        step = 0.01;
-        direction = -1;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate, active_extruder);
-        st_synchronize();
-        while (step > 0.005) {
+      //feedrate *= 0.25;
+      float med_z_touch=0,
+            med_z_untouch=0;
+      int   num_touch=0,
+            num_untouch=0;
+      while (num_fsr_probe < FSR_PROBE_COUNT) {
+        //zPosition += 2*FSR_OFFSET_FROM_EXTRUDER;
+        //SERIAL_ECHOPGM("Back Move");SERIAL_EOL;
+        //plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate, active_extruder);
+        //st_synchronize();
+        //analog_fsr_untouched = rawFSRSample();
+        step = 10/axis_steps_per_unit[Z_AXIS];
+        while (step >= 1/axis_steps_per_unit[Z_AXIS]) {
           if (touching_print_surface(threshold)) {
+            if (direction == -1) { 
+              //SERIAL_ECHOPGM("Touch!");SERIAL_ECHOLN(rawFSRSample());
+              step -= 2/axis_steps_per_unit[Z_AXIS];
+              med_z_touch +=zPosition;
+              num_touch++;
+              //SERIAL_ECHOPGM("step=");SERIAL_PROTOCOL_F(step,5);
+              //SERIAL_ECHOPGM(" zPosition=");SERIAL_PROTOCOL_F(zPosition,5);SERIAL_EOL;
+            }
+            //SERIAL_ECHOPGM(".");
             direction =  1;
-            step *= 0.8;
-            feedrate *= 0.8;
           } else {
+            if (direction == 1) { 
+              //SERIAL_ECHOPGM("UN_Touch!");SERIAL_ECHOLN(rawFSRSample());
+              step -= 2/axis_steps_per_unit[Z_AXIS];
+              med_z_untouch +=zPosition;
+              num_untouch++;
+              //SERIAL_ECHOPGM("step=");SERIAL_PROTOCOL_F(step,5);
+              //SERIAL_ECHOPGM(" zPosition=");SERIAL_PROTOCOL_F(zPosition,5);SERIAL_EOL;
+            }
+            //SERIAL_ECHOPGM(".");
             direction =  -1;
           }
           zPosition += step * direction;
           plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate, active_extruder);
           st_synchronize();
         }
-        SERIAL_ECHOPGM("zPosition="); SERIAL_ECHOLN(zPosition);
-        measured_fsr_position += zPosition;
+        
+        //SERIAL_ECHOPGM("Measured zPosition=");SERIAL_PROTOCOL_F(zPosition,5);SERIAL_EOL;
+        //SERIAL_ECHOPGM("Measured Touch Position=");SERIAL_PROTOCOL_F(med_z_touch/num_touch,5);SERIAL_EOL;
+        //SERIAL_ECHOPGM("Measured UNTouch Position=");SERIAL_PROTOCOL_F(med_z_untouch/num_untouch,5);SERIAL_EOL;
+        //SERIAL_ECHOPGM("Median Position=");SERIAL_PROTOCOL_F((med_z_untouch/num_untouch+med_z_touch/num_touch)/2,5);SERIAL_EOL;        
+        measured_fsr_position += (med_z_untouch/num_untouch+med_z_touch/num_touch)/2;
+        num_fsr_probe++;
+        med_z_touch=0; med_z_untouch=0;
+        num_touch=0; num_untouch=0;
       }
-      current_position[Z_AXIS] = (measured_fsr_position + FSR_OFFSET_FROM_EXTRUDER) / num_fsr_probe;
+      current_position[Z_AXIS] = measured_fsr_position / num_fsr_probe + FSR_OFFSET_FROM_EXTRUDER;
+      feedrate = homing_feedrate[Z_AXIS] / 60;
+      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate, active_extruder);
+      st_synchronize();
+      #ifndef ENDSTOPS_ONLY_FOR_HOMING
+        enable_endstops(true);
+      #endif
 }
 #endif
 
@@ -1590,6 +1624,10 @@ static void run_fsr_z_probe() {
 
   // Probe bed height at position (x,y), returns the measured z value
   static float probe_pt(float x, float y, float z_before, ProbeAction probe_action=ProbeDeployAndStow, int verbose_level=1) {
+    #if HAS_FSR_SENSOR
+      clear_fsr_noise ();
+      enable_fsr_check_noise(true);
+    #endif
     // Move Z up to the z_before height, then move the probe to the given XY
     do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], z_before); // this also updates current_position
     do_blocking_move_to(x - X_PROBE_OFFSET_FROM_EXTRUDER, y - Y_PROBE_OFFSET_FROM_EXTRUDER, current_position[Z_AXIS]); // this also updates current_position
@@ -1606,15 +1644,11 @@ static void run_fsr_z_probe() {
     #endif
 
     if (verbose_level > 2) {
-      SERIAL_PROTOCOLPGM("Bed X: ");
-      SERIAL_PROTOCOL_F(x, 3);
-      SERIAL_PROTOCOLPGM(" Y: ");
-      SERIAL_PROTOCOL_F(y, 3);
-      SERIAL_PROTOCOLPGM(" Z: ");
-      SERIAL_PROTOCOL_F(measured_z, 3);
+      SERIAL_PROTOCOLPGM("Bed X: ");SERIAL_PROTOCOL_F(current_position[X_AXIS],3);
+      SERIAL_PROTOCOLPGM(" Y: ");SERIAL_PROTOCOL_F(current_position[Y_AXIS],3);
+      SERIAL_PROTOCOLPGM(" Z: ");SERIAL_PROTOCOL_F(current_position[Z_AXIS],3);
       #if HAS_FSR_SENSOR
-       SERIAL_PROTOCOLPGM(" FSR: ");
-       SERIAL_PROTOCOL(rawFSRSample());
+       SERIAL_PROTOCOLPGM(" FSR: ");SERIAL_PROTOCOL(rawFSRSample());
       #endif
       SERIAL_EOL;
     }
@@ -2793,8 +2827,7 @@ inline void gcode_G28() {
         int abl2 = auto_bed_leveling_grid_points * auto_bed_leveling_grid_points;
 
         double eqnAMatrix[abl2 * 3], // "A" matrix of the linear system of equations
-               eqnBVector[abl2],     // "B" vector of Z points
-               mean = 0.0;
+               eqnBVector[abl2];     // "B" vector of Z points
       #endif // !DELTA
 
       int probePointCounter = 0;
@@ -2849,8 +2882,6 @@ inline void gcode_G28() {
           measured_z = probe_pt(xProbe, yProbe, z_before, act, verbose_level);
 
           #ifndef DELTA
-            mean += measured_z;
-
             eqnBVector[probePointCounter] = measured_z;
             eqnAMatrix[probePointCounter + 0 * abl2] = xProbe;
             eqnAMatrix[probePointCounter + 1 * abl2] = yProbe;
@@ -2875,10 +2906,30 @@ inline void gcode_G28() {
 
       #else // !DELTA
 
+        /* 
+        eqnBVector[0] = 2;
+        eqnBVector[1] = 1;
+        eqnBVector[2] = 0;
+        eqnBVector[3] = 2;
+        eqnBVector[4] = 1;
+        eqnBVector[5] = 0;
+        eqnBVector[6] = 2;
+        eqnBVector[7] = 1;
+        eqnBVector[8] = 0;
+        */
+        
+        // search minimum measured Z 
+        float diff = 0,
+              min_diff = Z_MAX_POS;
+        for (int ProbeCount = 0; ProbeCount < abl2; ProbeCount++) 
+          {
+            diff = eqnBVector[ProbeCount];
+            if (diff < min_diff ) min_diff = diff;
+          }
+        //SERIAL_PROTOCOLPGM("min_diff=");SERIAL_PROTOCOL_F(min_diff, 5);SERIAL_EOL;
+        
         // solve lsq problem
         double *plane_equation_coefficients = qr_solve(abl2, 3, eqnAMatrix, eqnBVector);
-
-        mean /= abl2;
 
         if (verbose_level) {
           SERIAL_PROTOCOLPGM("Eqn coefficients: a: ");
@@ -2888,27 +2939,40 @@ inline void gcode_G28() {
           SERIAL_PROTOCOLPGM(" d: ");
           SERIAL_PROTOCOL_F(plane_equation_coefficients[2], 8);
           SERIAL_EOL;
-          if (verbose_level > 2) {
-            SERIAL_PROTOCOLPGM("Mean of sampled points: ");
-            SERIAL_PROTOCOL_F(mean, 8);
-            SERIAL_EOL;
-          }
         }
+
+        if (!dryrun) set_bed_level_equation_lsq(plane_equation_coefficients);
+        free(plane_equation_coefficients);
+        matrix_3x3 inverse_bed_level_matrix = matrix_3x3::transpose(plan_bed_level_matrix); // inverse bed level matrix
+
+        // search minimum and maximum point on bed in rotated coordinats  
+        float rot_diff = 0,
+              rot_min_diff = Z_MAX_POS,
+              rot_max_diff = -Z_MAX_POS;
+        for (int ProbeCount = 0; ProbeCount < abl2; ProbeCount++) 
+          {
+            vector_3 probe_point = vector_3(eqnAMatrix[ProbeCount + 0 * abl2], eqnAMatrix[ProbeCount + 1 * abl2], eqnBVector[ProbeCount]);
+            probe_point.apply_rotation(inverse_bed_level_matrix);
+            float rot_diff =  probe_point.z ;
+            if (rot_diff < rot_min_diff ) rot_min_diff = rot_diff;
+            if (rot_diff > rot_max_diff ) rot_max_diff = rot_diff;
+          }
+        SERIAL_PROTOCOLPGM("rot_min_diff=");SERIAL_PROTOCOL_F(rot_min_diff, 5);SERIAL_EOL;  
+        SERIAL_PROTOCOLPGM("rot_max_diff=");SERIAL_PROTOCOL_F(rot_max_diff, 5);SERIAL_EOL;  
+        SERIAL_PROTOCOLPGM("difference=");SERIAL_PROTOCOL_F(rot_max_diff-rot_min_diff, 5);SERIAL_EOL;  
 
         // Show the Topography map if enabled
         if (do_topography_map) {
-
-          SERIAL_PROTOCOLPGM(" \nBed Height Topography: \n");
-          SERIAL_PROTOCOLPGM("+-----------+\n");
+          SERIAL_PROTOCOLPGM("\n+-----------+\n");
           SERIAL_PROTOCOLPGM("|...Back....|\n");
           SERIAL_PROTOCOLPGM("|Left..Right|\n");
           SERIAL_PROTOCOLPGM("|...Front...|\n");
           SERIAL_PROTOCOLPGM("+-----------+\n");
-
+          SERIAL_PROTOCOLPGM("Measured Bed Topography: \n");
           for (int yy = auto_bed_leveling_grid_points - 1; yy >= 0; yy--) {
             for (int xx = 0; xx < auto_bed_leveling_grid_points; xx++) {
               int ind = yy * auto_bed_leveling_grid_points + xx;
-              float diff = eqnBVector[ind] - mean;
+              float diff = eqnBVector[ind]; 
               if (diff >= 0.0)
                 SERIAL_PROTOCOLPGM(" +");   // Include + for column alignment
               else
@@ -2919,11 +2983,95 @@ inline void gcode_G28() {
           } // yy
           SERIAL_EOL;
 
+          SERIAL_PROTOCOLPGM(" \nCorrected Bed Topography: \n");
+          for (int yy = auto_bed_leveling_grid_points - 1; yy >= 0; yy--) {
+            for (int xx = 0; xx < auto_bed_leveling_grid_points; xx++) {
+              int ind = yy * auto_bed_leveling_grid_points + xx;
+              float diff = eqnBVector[ind] - min_diff;
+              if (diff >= 0.0)
+                SERIAL_PROTOCOLPGM(" +");   // Include + for column alignment
+              else
+                SERIAL_PROTOCOLCHAR(' ');
+              SERIAL_PROTOCOL_F(diff, 5);
+            } // xx
+            SERIAL_EOL;
+          } // yy
+          SERIAL_EOL;
+          
+          /*
+      	  SERIAL_PROTOCOLPGM(" \nBed Topography in new coordinats:\n");
+                for (int yy = auto_bed_leveling_grid_points - 1; yy >= 0; yy--) {
+                  for (int xx = 0; xx < auto_bed_leveling_grid_points; xx++) {
+                    int ind = yy * auto_bed_leveling_grid_points + xx;
+                    
+                    vector_3 probe_point = vector_3(eqnAMatrix[ind + 0 * abl2], eqnAMatrix[ind + 1 * abl2], eqnBVector[ind]);
+                    
+                    //SERIAL_PROTOCOLPGM("probe_point in real:");
+                    //SERIAL_PROTOCOLPGM("[");SERIAL_PROTOCOL_F(probe_point.x,5);
+                    //SERIAL_PROTOCOLPGM(",");SERIAL_PROTOCOL_F(probe_point.y,5);
+                    //SERIAL_PROTOCOLPGM(",");SERIAL_PROTOCOL_F(probe_point.z,5);
+                    //SERIAL_PROTOCOLPGM("]");SERIAL_EOL;
+                    
+                    probe_point.apply_rotation(inverse_bed_level_matrix);
+                    
+                    //SERIAL_PROTOCOLPGM("probe_point in virtual:");
+                    //SERIAL_PROTOCOLPGM("[");SERIAL_PROTOCOL_F(probe_point.x,5);
+                    //SERIAL_PROTOCOLPGM(",");SERIAL_PROTOCOL_F(probe_point.y,5);
+                    //SERIAL_PROTOCOLPGM(",");SERIAL_PROTOCOL_F(probe_point.z,5);
+                    //SERIAL_PROTOCOLPGM("]");SERIAL_EOL;
+                    
+                    float diff = probe_point.z;
+                    if (diff >= 0.0)
+                      SERIAL_PROTOCOLPGM(" +");
+                    // Include + for column alignment
+                    else
+                      SERIAL_PROTOCOLCHAR(' ');
+                    SERIAL_PROTOCOL_F(diff, 5);
+                  } // xx
+                  SERIAL_EOL;
+                } // yy
+                SERIAL_EOL;              
+          */
+      	  SERIAL_PROTOCOLPGM(" \nCorrected Bed Topography in new coordinats:\n");
+                for (int yy = auto_bed_leveling_grid_points - 1; yy >= 0; yy--) {
+                  for (int xx = 0; xx < auto_bed_leveling_grid_points; xx++) {
+                    int ind = yy * auto_bed_leveling_grid_points + xx;
+                    vector_3 probe_point = vector_3(eqnAMatrix[ind + 0 * abl2], eqnAMatrix[ind + 1 * abl2], eqnBVector[ind]);
+                    probe_point.apply_rotation(inverse_bed_level_matrix);
+                    float diff = probe_point.z - rot_min_diff;
+                    if (diff >= 0.0)
+                      SERIAL_PROTOCOLPGM(" +");
+                    // Include + for column alignment
+                    else
+                      SERIAL_PROTOCOLCHAR(' ');
+                    SERIAL_PROTOCOL_F(diff, 5);
+                  } // xx
+                  SERIAL_EOL;
+                } // yy
+                SERIAL_EOL;          
+
+      	  SERIAL_PROTOCOLPGM(" \nHeight from Bed to Nozzle : \n");
+      	  SERIAL_PROTOCOLPGM(" (+) is airprinting, (-) is touch under bed surface \n");
+                for (int yy = auto_bed_leveling_grid_points - 1; yy >= 0; yy--) {
+                  for (int xx = 0; xx < auto_bed_leveling_grid_points; xx++) {
+                    int ind = yy * auto_bed_leveling_grid_points + xx;
+                    vector_3 probe_point = vector_3(eqnAMatrix[ind + 0 * abl2], eqnAMatrix[ind + 1 * abl2], eqnBVector[ind]);
+                    probe_point.apply_rotation(inverse_bed_level_matrix);
+                    //float diff = -((probe_point.z - rot_min_diff) - (rot_max_diff - rot_min_diff));
+                    float diff = -(probe_point.z - rot_max_diff);
+                    if (diff >= 0.0)
+                      SERIAL_PROTOCOLPGM(" +");
+                    // Include + for column alignment
+                    else
+                      SERIAL_PROTOCOLCHAR(' ');
+                    SERIAL_PROTOCOL_F(diff, 5);
+                  } // xx
+                  SERIAL_EOL;
+                } // yy
+                SERIAL_EOL;
+
+                
         } //do_topography_map
-
-
-        if (!dryrun) set_bed_level_equation_lsq(plane_equation_coefficients);
-        free(plane_equation_coefficients);
 
       #endif //!DELTA
 
@@ -2946,22 +3094,16 @@ inline void gcode_G28() {
     #endif // !AUTO_BED_LEVELING_GRID
 
     #ifndef DELTA
-      if (verbose_level > 0)
-        plan_bed_level_matrix.debug(" \n\nBed Level Correction Matrix:");
+      //if (verbose_level > 0)
+      //  plan_bed_level_matrix.debug(" \n\nBed Level Correction Matrix:");
 
       if (!dryrun) {
-        // Correct the Z height difference from z-probe position and hotend tip position.
-        // The Z height on homing is measured by Z-Probe, but the probe is quite far from the hotend.
-        // When the bed is uneven, this height must be corrected.
-        float x_tmp = current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER,
-              y_tmp = current_position[Y_AXIS] + Y_PROBE_OFFSET_FROM_EXTRUDER,
-              z_tmp = current_position[Z_AXIS],
-              real_z = st_get_position_mm(Z_AXIS);  //get the real Z (since the auto bed leveling is already correcting the plane)
-
-        apply_rotation_xyz(plan_bed_level_matrix, x_tmp, y_tmp, z_tmp); // Apply the correction sending the probe offset
-        //line below controls z probe offset, zprobe_zoffset is the actual offset that can be modified via m851 or is read from EEPROM
-        current_position[Z_AXIS] = z_tmp - real_z - zprobe_zoffset; // The difference is added to current position and sent to planner.
+        int ind = abl2-1; // last point probe = current point
+        vector_3 probe_point = vector_3(eqnAMatrix[ind + 0 * abl2], eqnAMatrix[ind + 1 * abl2], eqnBVector[ind]);
+        probe_point.apply_rotation(inverse_bed_level_matrix);
+        current_position[Z_AXIS] = probe_point.z - rot_max_diff - zprobe_zoffset;
         sync_plan_position();
+        SERIAL_PROTOCOLPGM("current_position[Z_AXIS]=");SERIAL_PROTOCOL_F(current_position[Z_AXIS], 5);SERIAL_EOL;
       }
     #endif // !DELTA
 
@@ -2988,12 +3130,9 @@ inline void gcode_G28() {
       feedrate = homing_feedrate[Z_AXIS];
 
       run_z_probe();
-      SERIAL_PROTOCOLPGM("Bed X: ");
-      SERIAL_PROTOCOL(current_position[X_AXIS] + 0.0001);
-      SERIAL_PROTOCOLPGM(" Y: ");
-      SERIAL_PROTOCOL(current_position[Y_AXIS] + 0.0001);
-      SERIAL_PROTOCOLPGM(" Z: ");
-      SERIAL_PROTOCOL(current_position[Z_AXIS] + 0.0001);
+      SERIAL_PROTOCOLPGM("Bed X: ");SERIAL_PROTOCOL_F(current_position[X_AXIS],3);
+      SERIAL_PROTOCOLPGM(" Y: ");SERIAL_PROTOCOL_F(current_position[Y_AXIS],3);
+      SERIAL_PROTOCOLPGM(" Z: ");SERIAL_PROTOCOL_F(current_position[Z_AXIS],3);
       SERIAL_EOL;
 
       clean_up_after_endstop_move();
